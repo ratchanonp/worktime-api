@@ -24,6 +24,7 @@
         "graphql-modules": "^1.4.4",
         "graphql-subscriptions": "^1.2.1",
         "graphql-tools": "^4.0.8",
+        "jsonwebtoken": "^8.5.1",
         "lodash": "^4.17.21",
         "mongoose": "^5.13.2",
         "path": "^0.12.7",

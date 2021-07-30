@@ -1,13 +1,10 @@
 import express from "express";
 
 import { ApolloServer } from "apollo-server-express";
-import { ApolloServerPluginInlineTrace } from "apollo-server-core";
 
 import { application } from "./schema/index.js";
 
-import { createServer } from "http";
-import { execute, subscribe } from "graphql";
-import { SubscriptionServer } from "subscriptions-transport-ws";
+import jwt from "express-jwt";
 
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -25,39 +22,28 @@ const mongodb_uri = process.env.DB_URI;
 
 	const app = express();
 
-	const httpServer = createServer(app);
+	app.use(
+		jwt({
+			secret: process.env.JWT_SECRET,
+			algorithms: ["HS256"],
+			credentialsRequired: false,
+		})
+	);
 
 	const schema = application.createSchemaForApollo();
 
 	const server = new ApolloServer({
 		schema,
-		tracing: true,
-		plugins: [ApolloServerPluginInlineTrace()],
+		context: ({ req }) => {
+			const user = req.user || null;
+
+			return { user };
+		},
 	});
 
-	await server.start();
 	server.applyMiddleware({ app });
 
-	const subscriptionServer = SubscriptionServer.create(
-		{
-			schema,
-			execute,
-			subscribe,
-			onConnect() {
-				console.log("Connected!");
-			},
-			onDisconnect() {
-				console.log("Disconnected!");
-			},
-		},
-		{ server: httpServer, path: server.graphqlPath }
-	);
-
-	["SIGINT", "SIGTERM"].forEach((signal) => {
-		process.on(signal, () => subscriptionServer.close());
-	});
-
-	await httpServer.listen({ port: 4000 }, () => {
+	await app.listen({ port: 4000 }, () => {
 		console.log(
 			`🚀  Server ready at http://localhost:4000${server.graphqlPath}`
 		);
