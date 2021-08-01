@@ -43,7 +43,7 @@ const mongodb_uri = process.env.DB_URI;
 
 	server.applyMiddleware({ app });
 
-	await app.listen({ port: 4000 }, () => {
+	await app.listen({ port: process.env.PORT || 4000 }, () => {
 		console.log(
 			`🚀  Server ready at http://localhost:4000${server.graphqlPath}`
 		);
