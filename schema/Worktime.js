@@ -143,13 +143,19 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
+				const Hour = currentTime.getHours();
 				const currentDate = currentTime.toISOString().slice(0, 10);
+				
 
 				const CheckedIn = await Worktime.findOne({
 					userID: _id,
 					date: currentDate,
 					checkIn: { $ne: null },
 				});
+
+				if(Hour > 9 && Hour < 6 ) {
+					throw new Error("Not in time");
+				}
 
 				if (CheckedIn) {
 					throw new Error("Already Checked In");
@@ -180,6 +186,7 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
+				const Hour = currentTime.getHours();
 				const currentDate = currentTime.toISOString().slice(0, 10);
 				const CheckedIn = await Worktime.findOne({
 					userID: _id,
@@ -189,6 +196,10 @@ export const worktimeModule = createModule({
 
 				if (!CheckedIn) {
 					throw new Error("Not CheckedIn");
+				}
+
+				if(Hour < 16 && Hour > 20 ) {
+					throw new Error("Not in time");
 				}
 
 				const checkedOut = await Worktime.findOne({
