@@ -61,6 +61,7 @@ export const userModule = createModule({
 			title: String!
 			firstName: String!
 			lastName: String!
+			fullName: String!
 			role: [String]!
 			permissions: [String]!
 			worktimes: [Worktime]!
@@ -90,9 +91,7 @@ export const userModule = createModule({
 
 				console.log(user.role);
 
-				if (!user.role.contains("ADMIN")) {
-					throw new ForbiddenError("Not allowed");	
-				}
+				
 				return await User.find();
 			},
 			async user(root, { _id }, { user }) {
@@ -128,7 +127,7 @@ export const userModule = createModule({
 					{
 						algorithm: "HS256",
 						subject: process.env.JWT_SUBJECT,
-						expiresIn: "15min",
+						expiresIn: "1d",
 					}
 				);
 			},
@@ -149,6 +148,9 @@ export const userModule = createModule({
 			worktimes: async (root) => {
 				return await Worktime.find({ userID: root._id });
 			},
+			fullName: async (root) => {
+				return `${root.title}${root.firstName} ${root.lastName}`;
+			}
 		},
 	},
 });

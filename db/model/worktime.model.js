@@ -19,6 +19,10 @@ const worktimeSchema = new Schema(
 		checkOut: {
 			type: Date,
 		},
+		location: {
+			type: String,
+			required: true,
+		},
 	},
 	{
 		timestamps: true,

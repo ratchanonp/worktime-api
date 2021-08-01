@@ -15,12 +15,15 @@ export const worktimeModule = createModule({
 
 			todayCheckedIns: [Worktime]
 			todayCheckedOuts: [Worktime]
+
+			meStatus: Worktime
+			meWorktimes: [Worktime]
 		}
 
 		type Mutation {
 			# User Action
-			checkIn(userID: ID!): Worktime
-			checkOut(userID: ID!): Worktime
+			checkIn(location: String!): Worktime
+			checkOut: Worktime
 
 			# Admin Action
 			addWorktime(_id: ID!, worktime: WorktimeInput): Worktime
@@ -56,18 +59,20 @@ export const worktimeModule = createModule({
 		input WorktimeInput {
 			userID: ID
 			date: String
+			location: String
 			checkIn: String
 			checkOut: String
 		}
 
 		type Worktime {
-			_id: ID!
-			user: User!
-			date: String!
-			checkIn: String!
+			_id: ID
+			user: User
+			location: String
+			date: String
+			checkIn: String
 			checkOut: String
-			createdAt: String!
-			updatedAt: String!
+			createdAt: String
+			updatedAt: String
 		}
 	`,
 	resolvers: {
@@ -99,19 +104,49 @@ export const worktimeModule = createModule({
 			async worktimeByDates(root, { duration }) {
 				return await Worktime.find({ duration });
 			},
+			async meStatus(root, arg, { user }) {
+				if (!user) {
+					throw new Error("Not Logged in");
+				}
+				const { _id } = user;
+
+				const currentTime = new Date();
+				const currentDate = currentTime.toISOString().slice(0, 10);
+
+				//console.log(_id);
+				//console.log(currentDate);
+
+				const res = await Worktime.findOne({
+					userID: _id,
+					date: currentDate,
+				});
+
+				//console.log(res);
+				return res || {};
+			},
+			async meWorktimes(root, arg, { user }) {
+				if (!user) {
+					throw new Error("Not Logged in");
+				}
+				const { _id } = user;
+
+				return await Worktime.find({ userID: _id });
+			}
 		},
 		Mutation: {
 			// Check in
-			async checkIn(root, { userID }) {
-				const user = await User.findOne({ _id: userID });
+			async checkIn(root, { location } , { user }) {
 				if (!user) {
 					throw new Error("User not found");
 				}
+
+				const { _id } = user;
+
 				const currentTime = new Date();
 				const currentDate = currentTime.toISOString().slice(0, 10);
 
 				const CheckedIn = await Worktime.findOne({
-					userID: userID,
+					userID: _id,
 					date: currentDate,
 					checkIn: { $ne: null },
 				});
@@ -119,25 +154,35 @@ export const worktimeModule = createModule({
 				if (CheckedIn) {
 					throw new Error("Already Checked In");
 				}
+
+				if(!location) {
+					throw new Error("Location not provided");
+				}
+
+				//console.log(location);
+
 				const result = await Worktime.create({
-					userID: userID,
+					userID: _id,
+					location: location,
 					date: currentDate,
 					checkIn: currentTime,
 				});
+				
 
 				return result;
 			},
 			// Check out
-			async checkOut(root, { userID }) {
-				const user = await User.findOne({ _id: userID });
-
+			async checkOut(root, arg, { user }) {
 				if (!user) {
 					throw new Error("User not found");
 				}
+
+				const { _id } = user;
+
 				const currentTime = new Date();
 				const currentDate = currentTime.toISOString().slice(0, 10);
 				const CheckedIn = await Worktime.findOne({
-					userID: userID,
+					userID: _id,
 					date: currentDate,
 					checkIn: { $ne: null },
 				});
@@ -147,7 +192,7 @@ export const worktimeModule = createModule({
 				}
 
 				const checkedOut = await Worktime.findOne({
-					userID: userID,
+					userID: _id,
 					date: currentDate,
 					checkOut: { $ne: null },
 				});
@@ -158,7 +203,7 @@ export const worktimeModule = createModule({
 
 				const result = await Worktime.findOneAndUpdate(
 					{
-						userID: userID,
+						userID: _id,
 						date: currentDate,
 					},
 					{
@@ -196,6 +241,21 @@ export const worktimeModule = createModule({
 		Worktime: {
 			user: async (root) => {
 				return await User.findOne({ _id: root.userID });
+			},
+			date: async (root) => {
+				if (root.date) {
+					return root.date/ 1000 - ((root.date % 1000) / 1000);
+				}
+			},
+			checkIn: async (root) => {
+				if (root.checkIn) {
+					return root.checkIn / 1000 - ((root.checkIn % 1000) / 1000);
+				}
+			},
+			checkOut: async (root) => {
+				if (root.checkOut) {
+					return root.checkOut / 1000 - ((root.checkOut % 1000) / 1000);
+				}
 			},
 		},
 	},
