@@ -210,9 +210,11 @@ export const worktimeModule = createModule({
 						$set: {
 							checkOut: currentTime,
 						},
+					},
+					{
+						new: true
 					}
 				);
-
 				return result;
 			},
 
