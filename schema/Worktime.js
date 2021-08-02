@@ -16,6 +16,9 @@ export const worktimeModule = createModule({
 			todayCheckedIns: [Worktime]
 			todayCheckedOuts: [Worktime]
 
+			todayNotCheckedIn: [User]
+			todayNotCheckedOut: [User]
+
 			meStatus: Worktime
 			meWorktimes: [Worktime]
 		}
@@ -94,6 +97,38 @@ export const worktimeModule = createModule({
 					date: currentDate,
 					checkOut: { $ne: null },
 				});
+			},
+			async todayNotCheckedIn() {
+				const now = new Date();
+				const currentDate = now.toISOString().slice(0, 10);
+				const checkedIn = await Worktime.find({
+					date: currentDate,
+					checkIn: { $ne: null },
+				});
+				const users = User.find({
+					_id: {
+						$not : {
+							$in: checkedIn.map(item => item.userID),
+						},
+					},
+				});
+				return users;
+			},
+			async todayNotCheckedOut() {
+				const now = new Date();
+				const currentDate = now.toISOString().slice(0, 10);
+				const checkedOut = await Worktime.find({
+					date: currentDate,
+					checkOut: { $ne: null },
+				});
+				const users = User.find({
+					_id: {
+						$not : {
+							$in: checkedOut.map(item => item.userID),
+						},
+					},
+				});
+				return users;
 			},
 			async worktime() {
 				return await Worktime.find();
