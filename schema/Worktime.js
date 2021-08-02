@@ -87,7 +87,7 @@ export const worktimeModule = createModule({
 				return await Worktime.find({
 					date: currentDate,
 					checkIn: { $ne: null },
-				});
+				}).sort({ checkIn: -1 });
 			},
 			async todayCheckedOuts() {
 				const now = new Date();
@@ -96,7 +96,7 @@ export const worktimeModule = createModule({
 				return await Worktime.find({
 					date: currentDate,
 					checkOut: { $ne: null },
-				});
+				}).sort({ checkOut: -1 });
 			},
 			async todayNotCheckedIn() {
 				const now = new Date();
@@ -107,8 +107,8 @@ export const worktimeModule = createModule({
 				});
 				const users = User.find({
 					_id: {
-						$not : {
-							$in: checkedIn.map(item => item.userID),
+						$not: {
+							$in: checkedIn.map((item) => item.userID),
 						},
 					},
 				});
@@ -117,15 +117,20 @@ export const worktimeModule = createModule({
 			async todayNotCheckedOut() {
 				const now = new Date();
 				const currentDate = now.toISOString().slice(0, 10);
+				const checkedIn = await Worktime.find({
+					date: currentDate,
+					checkIn: { $ne: null },
+				});
 				const checkedOut = await Worktime.find({
 					date: currentDate,
 					checkOut: { $ne: null },
 				});
+
+				
 				const users = User.find({
 					_id: {
-						$not : {
-							$in: checkedOut.map(item => item.userID),
-						},
+						$nin: checkedOut.map((item) => item.userID),
+						$in: checkedIn.map((item) => item.userID),
 					},
 				});
 				return users;
@@ -166,11 +171,11 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				return await Worktime.find({ userID: _id });
-			}
+			},
 		},
 		Mutation: {
 			// Check in
-			async checkIn(root, { location } , { user }) {
+			async checkIn(root, { location }, { user }) {
 				if (!user) {
 					throw new Error("User not found");
 				}
@@ -178,12 +183,12 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
-				const Hour = currentTime.getHours() + 7;
+				const Hour = currentTime.getHours();
 				const currentDate = currentTime.toISOString().slice(0, 10);
 
 				console.log(Hour);
-				
-				if(Hour > 9 || Hour < 6) {
+
+				if (Hour > 9 || Hour < 6) {
 					console.log("Not in time");
 					throw new Error("Not in time");
 				}
@@ -193,13 +198,12 @@ export const worktimeModule = createModule({
 					date: currentDate,
 					checkIn: { $ne: null },
 				});
-			
 
 				if (CheckedIn) {
 					throw new Error("Already Checked In");
 				}
 
-				if(!location) {
+				if (!location) {
 					throw new Error("Location not provided");
 				}
 
@@ -211,7 +215,6 @@ export const worktimeModule = createModule({
 					date: currentDate,
 					checkIn: currentTime,
 				});
-				
 
 				return result;
 			},
@@ -224,7 +227,7 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
-				const Hour = currentTime.getHours() + 7;
+				const Hour = currentTime.getHours();
 				const currentDate = currentTime.toISOString().slice(0, 10);
 				const CheckedIn = await Worktime.findOne({
 					userID: _id,
@@ -236,7 +239,7 @@ export const worktimeModule = createModule({
 					throw new Error("Not CheckedIn");
 				}
 
-				if(Hour < 16 || Hour > 20 ) {
+				if (Hour < 16 || Hour > 20) {
 					throw new Error("Not in time");
 				}
 
@@ -261,7 +264,7 @@ export const worktimeModule = createModule({
 						},
 					},
 					{
-						new: true
+						new: true,
 					}
 				);
 				return result;
@@ -295,17 +298,17 @@ export const worktimeModule = createModule({
 			},
 			date: async (root) => {
 				if (root.date) {
-					return root.date/ 1000 - ((root.date % 1000) / 1000);
+					return root.date / 1000 - (root.date % 1000) / 1000;
 				}
 			},
 			checkIn: async (root) => {
 				if (root.checkIn) {
-					return root.checkIn / 1000 - ((root.checkIn % 1000) / 1000);
+					return root.checkIn / 1000 - (root.checkIn % 1000) / 1000;
 				}
 			},
 			checkOut: async (root) => {
 				if (root.checkOut) {
-					return root.checkOut / 1000 - ((root.checkOut % 1000) / 1000);
+					return root.checkOut / 1000 - (root.checkOut % 1000) / 1000;
 				}
 			},
 		},
