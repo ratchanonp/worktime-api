@@ -143,7 +143,7 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
-				const Hour = currentTime.getHours();
+				const Hour = currentTime.getHours() + 7;
 				const currentDate = currentTime.toISOString().slice(0, 10);
 
 				console.log(Hour);
@@ -189,7 +189,7 @@ export const worktimeModule = createModule({
 				const { _id } = user;
 
 				const currentTime = new Date();
-				const Hour = currentTime.getHours();
+				const Hour = currentTime.getHours() + 7;
 				const currentDate = currentTime.toISOString().slice(0, 10);
 				const CheckedIn = await Worktime.findOne({
 					userID: _id,
