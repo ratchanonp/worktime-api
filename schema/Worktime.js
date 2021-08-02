@@ -188,7 +188,7 @@ export const worktimeModule = createModule({
 
 				console.log(Hour);
 
-				if (Hour > 9 || Hour < 6) {
+				if (Hour > 8 || Hour < 6) {
 					console.log("Not in time");
 					throw new Error("Not in time");
 				}
@@ -239,7 +239,7 @@ export const worktimeModule = createModule({
 					throw new Error("Not CheckedIn");
 				}
 
-				if (Hour < 16 || Hour > 20) {
+				if (Hour < 16 || Hour > 19) {
 					throw new Error("Not in time");
 				}
 
