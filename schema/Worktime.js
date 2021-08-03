@@ -142,7 +142,17 @@ export const worktimeModule = createModule({
 				return await Worktime.find({ userID, duration });
 			},
 			async worktimeByDates(root, { duration }) {
-				return await Worktime.find({ duration });
+				const { startDate, endDate } = duration;
+				
+				const start = new Date(startDate * 1000);
+				const end = new Date(endDate * 1000);
+
+				return await Worktime.find({
+					date: {
+						$gte: start,
+						$lte: end,
+					},
+				});
 			},
 			async meStatus(root, arg, { user }) {
 				if (!user) {
@@ -189,8 +199,7 @@ export const worktimeModule = createModule({
 				console.log(Hour);
 
 				if (Hour > 8 || Hour < 6) {
-					console.log("Not in time");
-					throw new Error("Not in time");
+					throw new Error("นอกเหนือเวลาลงชื่อ");
 				}
 
 				const CheckedIn = await Worktime.findOne({
@@ -236,11 +245,11 @@ export const worktimeModule = createModule({
 				});
 
 				if (!CheckedIn) {
-					throw new Error("Not CheckedIn");
+					throw new Error("ยังไม่ได้ลงชื่อเข้า");
 				}
 
 				if (Hour < 16 || Hour > 19) {
-					throw new Error("Not in time");
+					throw new Error("นอกเหนือเวลาลงชื่อ");
 				}
 
 				const checkedOut = await Worktime.findOne({
