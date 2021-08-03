@@ -22,7 +22,7 @@ export const worktimeModule = createModule({
 			meStatus: Worktime
 			meWorktimes: [Worktime]
 
-			getServerTime: String!
+			getServerTime: String
 		}
 
 		type Mutation {
@@ -185,8 +185,9 @@ export const worktimeModule = createModule({
 				return await Worktime.find({ userID: _id });
 			},
 			async getServerTime() {
+				console.log(new Date());
 				return new Date();
-			}
+			},
 		},
 		Mutation: {
 			// Check in
