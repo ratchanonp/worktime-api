@@ -3,6 +3,8 @@ import Worktime from "../db/model/worktime.model.js";
 
 import { createModule, gql } from "graphql-modules";
 
+import moment from "moment-timezone";
+
 export const worktimeModule = createModule({
 	id: "worktimeModule",
 	dirname: "worktime",
@@ -185,8 +187,8 @@ export const worktimeModule = createModule({
 				return await Worktime.find({ userID: _id });
 			},
 			async getServerTime() {
-				console.log(new Date());
-				return new Date();
+				console.log(moment.tz(Date.now(), "Asia/Bangkok"));
+				return moment.tz(Date.now(), "Asia/Bangkok");
 			},
 		},
 		Mutation: {
@@ -204,7 +206,7 @@ export const worktimeModule = createModule({
 
 				console.log(Hour);
 
-				if (Hour > 8 || Hour < 6) {
+				if (Hour > 10 || Hour < 7) {
 					throw new Error("นอกเหนือเวลาลงชื่อ");
 				}
 
