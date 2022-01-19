@@ -2,24 +2,17 @@ import Mongoose from "mongoose";
 
 const { Schema } = Mongoose;
 
-const worktimeSchema = new Schema(
+const leaveSchema = new Schema(
 	{
 		userID: {
 			type: Schema.Types.ObjectId,
 			required: true,
-			ref: "User",
 		},
 		date: {
 			type: Date,
 			required: true,
 		},
-		checkIn: {
-			type: Date,
-		},
-		checkOut: {
-			type: Date,
-		},
-		location: {
+		reason: {
 			type: String,
 			required: true,
 		},
@@ -29,5 +22,5 @@ const worktimeSchema = new Schema(
 	}
 );
 
-const Worktime = Mongoose.model("Worktime", worktimeSchema);
-export default Worktime;
+const Leave = Mongoose.model("Leave", leaveSchema);
+export default Leave;

@@ -1,7 +1,10 @@
 import User from "../db/model/user.model.js";
 import Worktime from "../db/model/worktime.model.js";
+import Leave from "../db/model/leave.model.js";
 
 import { createModule, gql } from "graphql-modules";
+
+import moment from "moment-timezone";
 
 export const worktimeModule = createModule({
 	id: "worktimeModule",
@@ -29,6 +32,8 @@ export const worktimeModule = createModule({
 			# User Action
 			checkIn(location: String!): Worktime
 			checkOut: Worktime
+
+			leave(reason: String!): Leave
 
 			# Admin Action
 			addWorktime(_id: ID!, worktime: WorktimeInput): Worktime
@@ -76,8 +81,16 @@ export const worktimeModule = createModule({
 			date: String
 			checkIn: String
 			checkOut: String
+			note: String
 			createdAt: String
 			updatedAt: String
+		}
+
+		type Leave {
+			_id: ID
+			user: User
+			date: String
+			reason: String
 		}
 	`,
 	resolvers: {
@@ -185,8 +198,8 @@ export const worktimeModule = createModule({
 				return await Worktime.find({ userID: _id });
 			},
 			async getServerTime() {
-				console.log(new Date());
-				return new Date();
+				console.log(moment.tz(Date.now(), "Asia/Bangkok"));
+				return moment.tz(Date.now(), "Asia/Bangkok");
 			},
 		},
 		Mutation: {
@@ -204,7 +217,7 @@ export const worktimeModule = createModule({
 
 				console.log(Hour);
 
-				if (Hour > 8 || Hour < 6) {
+				if (Hour > 10 || Hour < 7) {
 					throw new Error("นอกเหนือเวลาลงชื่อ");
 				}
 
@@ -284,7 +297,34 @@ export const worktimeModule = createModule({
 				);
 				return result;
 			},
+			// Leave
+			async leave(root, { reason }, { user }) {
+				if (!user) {
+					throw new Error("User not found");
+				}
 
+				const { _id } = user;
+
+				const currentTime = new Date();
+				const currentDate = currentTime.toISOString().slice(0, 10);
+
+				const CheckedIn = await Worktime.findOne({
+					userID: _id,
+					date: currentDate,
+					checkIn: { $ne: null },
+				});
+
+				if (CheckedIn) {
+					throw new Error("ลงชื่อเข้าแล้วไม่สามารถลาได้");
+				}
+				
+				return await Leave.create({
+					userID: _id,
+					date: currentDate,
+					reason: reason,
+				});
+
+			},	
 			async addWorktime(root, { worktime }) {
 				return await Worktime.create(worktime);
 			},
